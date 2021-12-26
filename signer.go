@@ -16,16 +16,9 @@ var md5Quota = 1
 
 func ExecutePipeline(jobs ...job) {
 	prevOut := make(chan interface{}, chanBuffer)
-	in := make(chan interface{})
 	wg := &sync.WaitGroup{}
 	wg.Add(len(jobs))
-	generator := jobs[0]
-	go func(in, out chan interface{}) {
-		generator(in, out)
-		close(out)
-		wg.Done()
-	}(in, prevOut)
-	for _, jobFn := range jobs[1:] {
+	for _, jobFn := range jobs {
 		out := make(chan interface{}, chanBuffer)
 		go func(jobFn job, in, out chan interface{}) {
 			jobFn(in, out)
@@ -71,7 +64,6 @@ func SingleHash(in, out chan interface{}) {
 	wg.Wait()
 }
 func MultiHash(in, out chan interface{}) {
-
 	wg := &sync.WaitGroup{}
 	worker := func() {
 		for dataRaw := range in {
